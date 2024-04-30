@@ -1,14 +1,13 @@
-# my
+# ---------------------------------------------
+# Local
+# ---------------------------------------------
+.DS_Store
+.out
+.env
+
+venv/
 out/
 data/
-.DS_Store
-tests/
-.out
-.in
-.env.prod
-venv
-node_modules/
-db*
 
 # ---------------------------------------------
 # Python
@@ -44,3 +43,47 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+
+# ---------------------------------------------
+# Poetry
+# ---------------------------------------------
+*.pyc
+
+# Packages
+*.egg
+!/tests/**/*.egg
+/*.egg-info
+/dist/*
+build
+_build
+.cache
+*.so
+
+# Installer logs
+pip-log.txt
+
+# Unit test / coverage reports
+.coverage
+.pytest_cache
+
+.idea/*
+.python-version
+# .vscode/*
+
+# /test.py
+# /test_*.*
+
+/setup.cfg
+MANIFEST.in
+/setup.py
+/docs/site/*
+# /tests/fixtures/simple_project/setup.py
+# /tests/fixtures/project_with_extras/setup.py
+.mypy_cache
+
+.venv
+/releases/*
+pip-wheel-metadata
+/poetry.toml
+
+poetry/core/*
