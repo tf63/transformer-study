@@ -22,12 +22,12 @@ build()
 
 shell() 
 {
-    docker run --rm --gpus all --shm-size=16g -it -v $(pwd):/app -v $DATASET_DIRS:/dataset -v $DATA_DIRS:/data $TORCH_VERSION /bin/bash
+    docker run --rm --gpus all --shm-size=16g -it -v $(pwd):/app -v $DATASET_DIRS:/dataset -v $DATA_DIRS:/data --env-file ./.env $TORCH_VERSION /bin/bash
 }
 
 root()
 {
-    docker run --rm --gpus all --shm-size=16g --user 0:0 -it -v $(pwd):/app -v $DATASET_DIRS:/dataset -v $DATA_DIRS:/data $TORCH_VERSION /bin/bash
+    docker run --rm --gpus all --shm-size=16g --user 0:0 -it -v $(pwd):/app -v $DATASET_DIRS:/dataset -v $DATA_DIRS:/data --env-file ./.env $TORCH_VERSION /bin/bash
 }
 
 help()

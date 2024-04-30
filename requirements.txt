@@ -1,2 +1,5 @@
 pytorch-lightning==2.2.3
 wandb==0.16.6
+click==8.1.7
+jupyter==1.0.0
+ipykernel==6.29.4

@@ -9,4 +9,7 @@ torch.nn.module.transformer の内部実装
 - https://github.com/pytorch/pytorch/blob/main/torch/nn/modules/transformer.py
 
 pytorch lightning公式
-- https://pytorch-lightning.readthedocs.io/en/1.6.5/common/lightning_module.html
+- https://pytorch-lightning.readthedocs.io/en/2.2.3/common/lightning_module.html
+
+デモ用プロジェクト
+- https://github.com/i14kwmr/practice-transformer/tree/main
