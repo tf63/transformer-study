@@ -13,8 +13,8 @@ from src.dataset import ReverseDataset
 
 
 @click.command()
-@click.option("--accelerator", default=None, help="accelerator for training [gpu|cpu|tpu|ipu]")
-@click.option("--devices", default=None, help="number of devices")
+@click.option("--accelerator", default=None, help="accelerator for training [gpu|cpu|tpu|ipu|None (default)]")
+@click.option("--devices", default=None, help="number of devices (default: None)")
 @click.option("--lr", default=5e-4, help="learning rate (hparams)")
 def main(accelerator, devices, lr):
 
