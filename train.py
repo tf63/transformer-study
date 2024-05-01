@@ -27,7 +27,7 @@ from src.dataset import SNDataset
 @click.option("--seq_len", default=16, help="系列長")
 @click.option("--debug", is_flag=True, help="デバックモードで実行")
 def main(accelerator, devices, lr, max_epochs, num_datas, num_heads, dim, batch_size, num_categories, seq_len, debug):
-    """長さseq_lenの数列を逆順に変換するタスクをTransformerで学習する"""
+    """2つの数字からその間の連番を作成するタスクをTransformerで学習する"""
 
     # setting
     torch.set_float32_matmul_precision("high")
