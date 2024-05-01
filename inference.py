@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 
 from src.model import Transformer
 from src.model_lightning import TransformerLightning
-from src.dataset_reverse import ReverseDataset
+from src.dataset import SNDataset
 
 
 @click.command()
@@ -29,7 +29,7 @@ def main(accelerator, devices, lr, max_epochs, num_heads, dim, batch_size, num_c
     device = "cuda" if devices is not None else "cpu"
 
     # dataloaderを作成
-    dataset = partial(ReverseDataset, num_categories, seq_len)
+    dataset = partial(SNDataset, num_categories, seq_len)
     test_loader = DataLoader(dataset(1), batch_size=1, shuffle=True, drop_last=True, pin_memory=True)
 
     # modelを作成

@@ -11,7 +11,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 
 from src.model import Transformer
 from src.model_lightning import TransformerLightning
-from src.dataset import ReverseDataset
+from src.dataset import SNDataset
 
 
 @click.command()
@@ -22,7 +22,7 @@ from src.dataset import ReverseDataset
 @click.option("--batch_size", default=128, help="batch size")
 @click.option("--num_heads", default=1, help="Headの数")
 @click.option("--dim", default=32, help="embedding dimension")
-@click.option("--num_categories", default=12, help="vocab (今回は0 ~ 9 + 開始/終了タグ なので12個)")
+@click.option("--num_categories", default=10, help="vocab (今回は0 ~ 9)")
 @click.option("--seq_len", default=16, help="系列長")
 @click.option("--debug", is_flag=True, help="デバックモードで実行")
 def main(accelerator, devices, lr, max_epochs, num_heads, dim, batch_size, num_categories, seq_len, debug):
@@ -31,26 +31,28 @@ def main(accelerator, devices, lr, max_epochs, num_heads, dim, batch_size, num_c
     # setting
     torch.set_float32_matmul_precision("high")
     pytorch_lightning.seed_everything(42)
-    exp_name = f"head{num_heads}-dim{dim}-lr{lr}"
+    exp_name = f"sn-head{num_heads}-dim{dim}-lr{lr}"
     device = "cuda" if devices is not None else "cpu"
     config = click.get_current_context().params
+    vocab_size = num_categories + 4  # 0 ~ 9 + 開始/終了/余白タグ と 偶数にするために+1
+    assert seq_len > vocab_size, "今回はseq_lenがvocab_sizeより大きいことを想定"
 
     # dataloaderを作成
-    dataset = partial(ReverseDataset, num_categories, seq_len)
+    dataset = partial(SNDataset, num_categories, seq_len)
     train_loader = DataLoader(dataset(50000), batch_size=batch_size, shuffle=True, drop_last=True, pin_memory=True, num_workers=4)
     val_loader = DataLoader(dataset(1000), batch_size=batch_size, num_workers=4)
     test_loader = DataLoader(dataset(10000), batch_size=batch_size, num_workers=4)
 
     # modelを作成
     model = Transformer(device=device,
-                        enc_vocab_size=num_categories,
-                        dec_vocab_size=num_categories,
+                        enc_vocab_size=vocab_size,
+                        dec_vocab_size=vocab_size,
                         dim=dim,
                         num_heads=num_heads).to(device)
     model_lightning = TransformerLightning(model=model,
                                            lr=lr,
-                                           dec_vocab_size=num_categories,
-                                           mask_size=seq_len + 1)
+                                           dec_vocab_size=vocab_size,
+                                           mask_size=seq_len)
 
     # loggerを作成
     wandb_logger = WandbLogger(project="transformer-study",
