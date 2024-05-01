@@ -40,7 +40,6 @@ def main(accelerator, devices, lr, max_epochs, num_datas, num_heads, dim, batch_
                         dec_vocab_size=vocab_size,
                         dim=dim,
                         num_heads=num_heads).to(device)
-
     model_lightning = TransformerLightning.load_from_checkpoint("ckpts/sn-data-50000-head8-dim512-lr0.0001/epoch=9.ckpt",
                                                                 model=model,
                                                                 lr=lr,

@@ -1,5 +1,5 @@
 #!/bin/bash
-python3 train_lightning.py \
+python3 train.py \
     --accelerator gpu \
     --devices 1 \
     --batch_size 256 \

@@ -1,5 +1,23 @@
 # Transformer勉強会 実装
 
+環境構築
+```
+    bash docker.sh build
+    bash docker.sh shell
+```
+
+学習
+```
+    bash cmd/train.sh
+```
+
+推論
+```
+    python3 inference.py
+```
+
+### 
+
 ### 参考リンク
 
 model.pyの参考
