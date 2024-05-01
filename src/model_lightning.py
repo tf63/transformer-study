@@ -15,6 +15,7 @@ class TransformerLightning(pl.LightningModule):
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
+
         return optimizer
 
     def _calculate_loss(self, batch):
@@ -30,7 +31,8 @@ class TransformerLightning(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         loss = self._calculate_loss(batch)
         self.log("train/loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
-        return loss
+
+        return loss  # この関数でlossを返すとbackwardされるようになっている
 
     def validation_step(self, batch, batch_idx):
         loss = self._calculate_loss(batch)

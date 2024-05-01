@@ -9,11 +9,11 @@ class PositionalEncoding(nn.Module):
     def __init__(self, dim, device='cpu', dropout=0.1, max_len=5000):
         super().__init__()
         self.dropout = nn.Dropout(p=dropout)
-        position = torch.arange(max_len).unsqueeze(1).to(device)
-        div_term = torch.exp(torch.arange(0, dim, 2) * (-math.log(10000.0) / dim)).to(device)
-        pe = torch.zeros(max_len, 1, dim).to(device)
-        pe[:, 0, 0::2] = torch.sin(position * div_term)
-        pe[:, 0, 1::2] = torch.cos(position * div_term)
+        position = torch.arange(max_len).unsqueeze(1).to(device)  # [0, 1, 2, ...]を作ってshapeを合わせる
+        div_term = torch.exp(torch.arange(0, dim, 2) * (-math.log(10000.0) / dim)).to(device)  # [1/10000^(2dim/D), ...]を作る
+        pe = torch.zeros(max_len, 1, dim).to(device)  # Positional Encoding本体
+        pe[:, 0, 0::2] = torch.sin(position * div_term)  # peの偶数番目をsinで埋める
+        pe[:, 0, 1::2] = torch.cos(position * div_term)  # peの奇数番目をcosで埋める
         self.register_buffer('pe', pe)
 
     def forward(self, x):
@@ -23,10 +23,10 @@ class PositionalEncoding(nn.Module):
 
 class MultiHeadAttention(nn.Module):
 
-    def __init__(self, dim, head_num, dropout=0.1):
+    def __init__(self, dim, num_heads, dropout=0.1):
         super().__init__()
         self.dim = dim
-        self.head_num = head_num
+        self.num_heads = num_heads
         self.linear_Q = nn.Linear(dim, dim, bias=False)
         self.linear_K = nn.Linear(dim, dim, bias=False)
         self.linear_V = nn.Linear(dim, dim, bias=False)
@@ -35,7 +35,7 @@ class MultiHeadAttention(nn.Module):
         self.dropout = nn.Dropout(dropout)
 
     def split_head(self, x):
-        x = torch.tensor_split(x, self.head_num, dim=2)
+        x = torch.tensor_split(x, self.num_heads, dim=2)
         x = torch.stack(x, dim=1)
         return x
 
@@ -49,21 +49,22 @@ class MultiHeadAttention(nn.Module):
         K = self.linear_K(K)
         V = self.linear_V(V)
 
-        Q = self.split_head(Q)  # (BATCH_SIZE,head_num,word_count//head_num,dim)
+        # Multi-Headにする
+        Q = self.split_head(Q)  # (BATCH_SIZE,num_heads,word_count//num_heads,dim)
         K = self.split_head(K)
         V = self.split_head(V)
 
-        QK = torch.matmul(Q, torch.transpose(K, 3, 2))
-        QK = QK / ((self.dim // self.head_num)**0.5)
+        QK = torch.matmul(Q, torch.transpose(K, 3, 2))  # QKを作る
+        QK = QK / ((self.dim // self.num_heads)**0.5)  # scale
 
         if mask is not None:
-            QK = QK + mask
+            QK = QK + mask  # mask (-infを足すことでマスクする, -infはsoftmaxで弾かれる)
 
         softmax_QK = self.soft(QK)
         softmax_QK = self.dropout(softmax_QK)
 
-        QKV = torch.matmul(softmax_QK, V)
-        QKV = self.concat_head(QKV)
+        QKV = torch.matmul(softmax_QK, V)  # QKVを作る
+        QKV = self.concat_head(QKV)  # Multi-Headにしたものをconcatする
         QKV = self.linear(QKV)
         return QKV
 
@@ -87,9 +88,9 @@ class FeedForward(nn.Module):
 
 class EncoderBlock(nn.Module):
 
-    def __init__(self, dim, head_num, dropout=0.1):
+    def __init__(self, dim, num_heads, dropout=0.1):
         super().__init__()
-        self.MHA = MultiHeadAttention(dim, head_num)
+        self.MHA = MultiHeadAttention(dim, num_heads)
         self.layer_norm_1 = nn.LayerNorm([dim])
         self.layer_norm_2 = nn.LayerNorm([dim])
         self.FF = FeedForward(dim)
@@ -112,13 +113,13 @@ class EncoderBlock(nn.Module):
 
 class Encoder(nn.Module):
 
-    def __init__(self, enc_vocab_size, dim, head_num, device='cpu', dropout=0.1):
+    def __init__(self, enc_vocab_size, dim, num_heads, device='cpu', dropout=0.1):
         super().__init__()
         self.dim = dim
         self.embed = nn.Embedding(enc_vocab_size, dim)
         self.PE = PositionalEncoding(dim, device=device)
         self.dropout = nn.Dropout(dropout)
-        self.EncoderBlocks = nn.ModuleList([EncoderBlock(dim, head_num) for _ in range(6)])
+        self.EncoderBlocks = nn.ModuleList([EncoderBlock(dim, num_heads) for _ in range(6)])
 
     def forward(self, x):
         x = self.embed(x)
@@ -132,10 +133,10 @@ class Encoder(nn.Module):
 
 class DecoderBlock(nn.Module):
 
-    def __init__(self, dim, head_num, dropout=0.1):
+    def __init__(self, dim, num_heads, dropout=0.1):
         super().__init__()
-        self.MMHA = MultiHeadAttention(dim, head_num)
-        self.MHA = MultiHeadAttention(dim, head_num)
+        self.MMHA = MultiHeadAttention(dim, num_heads)
+        self.MHA = MultiHeadAttention(dim, num_heads)
         self.layer_norm_1 = nn.LayerNorm([dim])
         self.layer_norm_2 = nn.LayerNorm([dim])
         self.layer_norm_3 = nn.LayerNorm([dim])
@@ -166,12 +167,12 @@ class DecoderBlock(nn.Module):
 
 class Decoder(nn.Module):
 
-    def __init__(self, dec_vocab_size, dim, head_num, device='cpu', dropout=0.1):
+    def __init__(self, dec_vocab_size, dim, num_heads, device='cpu', dropout=0.1):
         super().__init__()
         self.dim = dim
         self.embed = nn.Embedding(dec_vocab_size, dim)
         self.PE = PositionalEncoding(dim, device=device)
-        self.DecoderBlocks = nn.ModuleList([DecoderBlock(dim, head_num) for _ in range(6)])
+        self.DecoderBlocks = nn.ModuleList([DecoderBlock(dim, num_heads) for _ in range(6)])
         self.dropout = nn.Dropout(dropout)
         self.linear = nn.Linear(dim, dec_vocab_size)
 
@@ -188,10 +189,10 @@ class Decoder(nn.Module):
 
 class Transformer(nn.Module):
 
-    def __init__(self, enc_vocab_size, dec_vocab_size, dim, head_num, device='cpu'):
+    def __init__(self, enc_vocab_size, dec_vocab_size, dim, num_heads, device='cpu'):
         super().__init__()
-        self.encoder = Encoder(enc_vocab_size, dim, head_num, device=device)
-        self.decoder = Decoder(dec_vocab_size, dim, head_num, device=device)
+        self.encoder = Encoder(enc_vocab_size, dim, num_heads, device=device)
+        self.decoder = Decoder(dec_vocab_size, dim, num_heads, device=device)
 
     def forward(self, enc_input, dec_input, mask):
         enc_output = self.encoder(enc_input)

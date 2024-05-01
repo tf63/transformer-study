@@ -19,8 +19,9 @@ class ReverseDataset(data.Dataset):
 
     def __getitem__(self, idx):
         x = self.data[idx]  # 入力データ
-        y = torch.flip(x, dims=(0,))
-        dec_input = y[:-1]
-        target = y[1:]
+        y = torch.flip(x, dims=(0,))  # 正解データ
+
+        dec_input = y[:-1]  # decoderへの入力 (1つシフトする)
+        target = y[1:]  # 正解ラベル
 
         return x, dec_input, target
