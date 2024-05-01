@@ -19,19 +19,20 @@ from src.dataset import SNDataset
 @click.option("--devices", default="1", help="number of devices (default: 1)")
 @click.option("--lr", default=0.01, help="learning rate")
 @click.option("--max_epochs", default=100, help="epoch")
+@click.option("--num_datas", default=50000, help="data数")
 @click.option("--batch_size", default=128, help="batch size")
 @click.option("--num_heads", default=1, help="Headの数")
 @click.option("--dim", default=32, help="embedding dimension")
 @click.option("--num_categories", default=10, help="vocab (今回は0 ~ 9)")
 @click.option("--seq_len", default=16, help="系列長")
 @click.option("--debug", is_flag=True, help="デバックモードで実行")
-def main(accelerator, devices, lr, max_epochs, num_heads, dim, batch_size, num_categories, seq_len, debug):
+def main(accelerator, devices, lr, max_epochs, num_datas, num_heads, dim, batch_size, num_categories, seq_len, debug):
     """長さseq_lenの数列を逆順に変換するタスクをTransformerで学習する"""
 
     # setting
     torch.set_float32_matmul_precision("high")
     pytorch_lightning.seed_everything(42)
-    exp_name = f"sn-head{num_heads}-dim{dim}-lr{lr}"
+    exp_name = f"sn-data-{num_datas}-head{num_heads}-dim{dim}-lr{lr}"
     device = "cuda" if devices is not None else "cpu"
     config = click.get_current_context().params
     vocab_size = num_categories + 4  # 0 ~ 9 + 開始/終了/余白タグ と 偶数にするために+1
@@ -39,8 +40,8 @@ def main(accelerator, devices, lr, max_epochs, num_heads, dim, batch_size, num_c
 
     # dataloaderを作成
     dataset = partial(SNDataset, num_categories, seq_len)
-    train_loader = DataLoader(dataset(50000), batch_size=batch_size, shuffle=True, drop_last=True, pin_memory=True, num_workers=4)
-    val_loader = DataLoader(dataset(1000), batch_size=batch_size, num_workers=4)
+    train_loader = DataLoader(dataset(num_datas), batch_size=batch_size, shuffle=True, drop_last=True, pin_memory=True, num_workers=4)
+    val_loader = DataLoader(dataset(5000), batch_size=batch_size, num_workers=4)
     test_loader = DataLoader(dataset(10000), batch_size=batch_size, num_workers=4)
 
     # modelを作成
