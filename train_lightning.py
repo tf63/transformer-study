@@ -53,7 +53,7 @@ def main(accelerator, devices, lr, max_epochs, num_datas, num_heads, dim, batch_
     model_lightning = TransformerLightning(model=model,
                                            lr=lr,
                                            dec_vocab_size=vocab_size,
-                                           mask_size=seq_len)
+                                           mask_size=vocab_size + 1)
 
     # loggerを作成
     wandb_logger = WandbLogger(project="transformer-study",

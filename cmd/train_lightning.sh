@@ -2,9 +2,9 @@
 python3 train_lightning.py \
     --accelerator gpu \
     --devices 1 \
-    --batch_size 128 \
+    --batch_size 256 \
     --num_datas 50000 \
-    --max_epochs 30 \
-    --lr 0.001 \
+    --max_epochs 10 \
+    --lr 0.01 \
     --num_heads 8 \
     --dim 512

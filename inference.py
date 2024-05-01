@@ -41,7 +41,7 @@ def main(accelerator, devices, lr, max_epochs, num_datas, num_heads, dim, batch_
                         dim=dim,
                         num_heads=num_heads).to(device)
 
-    model_lightning = TransformerLightning.load_from_checkpoint("ckpts/sn-head8-dim512-lr0.001/epoch=7.ckpt",
+    model_lightning = TransformerLightning.load_from_checkpoint("ckpts/sn-data-50000-head8-dim512-lr0.0001/epoch=9.ckpt",
                                                                 model=model,
                                                                 lr=lr,
                                                                 dec_vocab_size=vocab_size,
@@ -53,7 +53,7 @@ def main(accelerator, devices, lr, max_epochs, num_datas, num_heads, dim, batch_
         dec_input = torch.full_like(target, num_categories + 3)  # 余白タグで埋める
         dec_input[:, 0] = num_categories + 1  # 開始タグ
         x, dec_input, target = x.to(device), dec_input.to(device), target.to(device)
-        mask = nn.Transformer.generate_square_subsequent_mask(seq_len).to(device)  # マスクの作成
+        mask = nn.Transformer.generate_square_subsequent_mask(vocab_size + 1).to(device)  # マスクの作成
 
         for i in range(seq_len - 2):
             dec_output = model_lightning.model(x, dec_input, mask)
@@ -65,8 +65,8 @@ def main(accelerator, devices, lr, max_epochs, num_datas, num_heads, dim, batch_
         print(f"dec_input   : {dec_input.tolist()}")
         print(f"target      : {target.tolist()}")
         print(f"prediction  : {prediction.tolist()}")
-        print(f"accuracy    : {torch.sum(prediction == target) / vocab_size:.4}")
-        print(f"chance rate : {1 / vocab_size:.4}")
+        print(f"accuracy    : {torch.sum(prediction == target) / (seq_len - 1):.4}")
+        print(f"chance rate : {1 / seq_len:.4}")
 
 
 if __name__ == "__main__":

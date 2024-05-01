@@ -32,13 +32,12 @@ class SNDataset(data.Dataset):
         x = torch.cat([prefix, x, suffix], dim=0)
         y = torch.cat([prefix, y, suffix], dim=0)
 
-        dec_input = y[:-1]  # decoderへの入力 (1つシフトする)
-        target = y[1:]  # 正解ラベル
-
         # padding
         x = F.pad(x, (0, self.seq_len - x.size(0)), value=self.num_categories + 3)
-        dec_input = F.pad(dec_input, (0, self.seq_len - dec_input.size(0)), value=self.num_categories + 3)
-        target = F.pad(target, (0, self.seq_len - target.size(0)), value=self.num_categories + 3)
+        y = F.pad(y, (0, self.seq_len - y.size(0)), value=self.num_categories + 3)
+
+        dec_input = y[:-1]  # decoderへの入力 (1つシフトする)
+        target = y[1:]  # 正解ラベル
 
         return x, dec_input, target
 
