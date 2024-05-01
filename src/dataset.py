@@ -21,7 +21,32 @@ class ReverseDataset(data.Dataset):
         x = self.data[idx]  # 入力データ
         y = torch.flip(x, dims=(0,))  # 正解データ
 
+        prefix = torch.tensor([10])
+        suffix = torch.tensor([11])
+
+        x = torch.cat([prefix, x, suffix], dim=0)
+        y = torch.cat([prefix, y, suffix], dim=0)
+
         dec_input = y[:-1]  # decoderへの入力 (1つシフトする)
         target = y[1:]  # 正解ラベル
 
         return x, dec_input, target
+
+
+if __name__ == "__main__":
+    from functools import partial
+    from torch.utils.data import DataLoader
+
+    # dataloaderを作成
+    num_categories = 12
+    seq_len = 14
+    dataset = partial(ReverseDataset, num_categories, seq_len)
+    train_loader = DataLoader(dataset(1000), batch_size=2, shuffle=True, drop_last=True, pin_memory=True)
+
+    for batch in train_loader:
+        x, dec_input, target = batch
+        print(f"shape: x {x.shape}, dec_input: {dec_input.shape}, target: {target.shape}")
+        print(f"x[0]: {x[0]}")
+        print(f"dec_input[0]: {dec_input[0]}")
+        print(f"target[0]: {target[0]}")
+        break

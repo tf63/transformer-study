@@ -22,7 +22,7 @@ from src.dataset import ReverseDataset
 @click.option("--batch_size", default=128, help="batch size")
 @click.option("--num_heads", default=1, help="Headの数")
 @click.option("--dim", default=32, help="embedding dimension")
-@click.option("--num_categories", default=10, help="vocab (今回は0 ~ 9なので10個)")
+@click.option("--num_categories", default=12, help="vocab (今回は0 ~ 9 + 開始/終了タグ なので12個)")
 @click.option("--seq_len", default=16, help="系列長")
 @click.option("--debug", is_flag=True, help="デバックモードで実行")
 def main(accelerator, devices, lr, max_epochs, num_heads, dim, batch_size, num_categories, seq_len, debug):
@@ -37,9 +37,9 @@ def main(accelerator, devices, lr, max_epochs, num_heads, dim, batch_size, num_c
 
     # dataloaderを作成
     dataset = partial(ReverseDataset, num_categories, seq_len)
-    train_loader = DataLoader(dataset(50000), batch_size=batch_size, shuffle=True, drop_last=True, pin_memory=True, num_workers=16)
-    val_loader = DataLoader(dataset(1000), batch_size=batch_size, num_workers=16)
-    test_loader = DataLoader(dataset(10000), batch_size=batch_size, num_workers=16)
+    train_loader = DataLoader(dataset(50000), batch_size=batch_size, shuffle=True, drop_last=True, pin_memory=True, num_workers=4)
+    val_loader = DataLoader(dataset(1000), batch_size=batch_size, num_workers=4)
+    test_loader = DataLoader(dataset(10000), batch_size=batch_size, num_workers=4)
 
     # modelを作成
     model = Transformer(device=device,
@@ -50,7 +50,7 @@ def main(accelerator, devices, lr, max_epochs, num_heads, dim, batch_size, num_c
     model_lightning = TransformerLightning(model=model,
                                            lr=lr,
                                            dec_vocab_size=num_categories,
-                                           mask_size=seq_len - 1)
+                                           mask_size=seq_len + 1)
 
     # loggerを作成
     wandb_logger = WandbLogger(project="transformer-study",
