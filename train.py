@@ -17,24 +17,26 @@ from src.dataset import SNDataset
 @click.command()
 @click.option("--accelerator", default="gpu", help="accelerator for training [gpu|cpu|tpu|ipu|None] (default: gpu)")
 @click.option("--devices", default="1", help="number of devices (default: 1)")
-@click.option("--lr", default=0.01, help="learning rate")
+@click.option("--lr", default=0.0001, help="learning rate")
 @click.option("--max_epochs", default=100, help="epoch")
 @click.option("--num_datas", default=50000, help="data数")
 @click.option("--batch_size", default=128, help="batch size")
 @click.option("--num_heads", default=1, help="Headの数")
 @click.option("--dim", default=32, help="embedding dimension")
-@click.option("--num_categories", default=10, help="vocab (今回は0 ~ 9)")
-@click.option("--seq_len", default=16, help="系列長")
 @click.option("--debug", is_flag=True, help="デバックモードで実行")
-def main(accelerator, devices, lr, max_epochs, num_datas, num_heads, dim, batch_size, num_categories, seq_len, debug):
+def main(accelerator, devices, lr, max_epochs, num_datas, num_heads, dim, batch_size, debug):
     """2つの数字からその間の連番を作成するタスクをTransformerで学習する"""
 
     # setting
     torch.set_float32_matmul_precision("high")
     pytorch_lightning.seed_everything(42)
+
     exp_name = f"sn-data-{num_datas}-head{num_heads}-dim{dim}-lr{lr}"
     device = "cuda" if devices is not None else "cpu"
     config = click.get_current_context().params
+
+    num_categories = 10  # vocab (今回は0 ~ 9)
+    seq_len = 16  # 系列長．16で揃える
     vocab_size = num_categories + 4  # 0 ~ 9 + 開始/終了/余白タグ と 偶数にするために+1
     assert seq_len > vocab_size, "今回はseq_lenがvocab_sizeより大きいことを想定"
 

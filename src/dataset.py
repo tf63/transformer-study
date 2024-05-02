@@ -4,19 +4,46 @@ import torch.nn.functional as F
 
 
 class SNDataset(data.Dataset):
+    """
+    Serial Number Dataset
+    0からnum_categories-1までの整数のペアと、その間の連番を生成するデータセット
+    初期化
+        num_categories (int): 0からnum_categories-1までの整数が生成される
+        seq_len (int): シーケンス長
+        size (int): データセットのデータ数
+    batchはx, dec_input, targetで構成される
+        x: 0からnum_categories-1までのランダムな整数のペア
+        dec_input: xから作成した連番 (1つシフト)
+        target: xから作成した連番
+    前処理としてprefix, suffix, paddingを追加している
+        prefix: number_categories + 1を割り当て
+        suffix: number_categories + 2を割り当て
+        padding: number_categories + 3を割り当て
+    例: 
+        num_categories=10, seq_len=6
+            x: [11, 3, 6, 12, 13, 13]
+            dec_input: [11, 3, 4, 5, 6]
+            target: [3, 4, 5, 6, 12]
+    """
+
     def __init__(self, num_categories, seq_len, size):
         super().__init__()
         self.num_categories = num_categories
         self.seq_len = seq_len
         self.size = size
 
-        self.data = torch.randint(self.num_categories, size=(self.size, 2))  # num_categories未満の整数
+        self.prefix = num_categories + 1
+        self.suffix = num_categories + 2
+        self.padding = num_categories + 3
+
+        # ランダムな整数のペアを作成
+        self.data = torch.randint(self.num_categories, size=(self.size, 2)) 
 
     def __len__(self):
         return self.size
 
     def __getitem__(self, idx):
-        x = self.data[idx]  # 入力データ
+        x = self.data[idx]
 
         # x[0] から x[1] までの連続した整数を生成
         if x[0] < x[1]:
@@ -26,15 +53,16 @@ class SNDataset(data.Dataset):
         else:
             y = torch.flip(torch.arange(x[1].item(), x[0].item() + 1), dims=(0,))
 
-        prefix = torch.tensor([self.num_categories + 1])  # 開始タグ
-        suffix = torch.tensor([self.num_categories + 2])  # 終了タグ
+        # suffixとprefixを追加
+        prefix = torch.tensor([self.prefix])
+        suffix = torch.tensor([self.suffix])
 
         x = torch.cat([prefix, x, suffix], dim=0)
         y = torch.cat([prefix, y, suffix], dim=0)
 
         # padding
-        x = F.pad(x, (0, self.seq_len - x.size(0)), value=self.num_categories + 3)
-        y = F.pad(y, (0, self.seq_len - y.size(0)), value=self.num_categories + 3)
+        x = F.pad(x, (0, self.seq_len - x.size(0)), value=self.padding)
+        y = F.pad(y, (0, self.seq_len - y.size(0)), value=self.padding)
 
         dec_input = y[:-1]  # decoderへの入力 (1つシフトする)
         target = y[1:]  # 正解ラベル

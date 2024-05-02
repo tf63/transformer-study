@@ -5,6 +5,6 @@ python3 train.py \
     --batch_size 256 \
     --num_datas 50000 \
     --max_epochs 10 \
-    --lr 0.01 \
+    --lr 0.0001 \
     --num_heads 8 \
     --dim 512
