@@ -16,9 +16,9 @@ class SNDataset(data.Dataset):
         dec_input: xから作成した連番 (1つシフト)
         target: xから作成した連番
     前処理としてprefix, suffix, paddingを追加している
-        prefix: number_categories + 1を割り当て
-        suffix: number_categories + 2を割り当て
-        padding: number_categories + 3を割り当て
+        prefix: num_categories + 1を割り当て
+        suffix: num_categories + 2を割り当て
+        padding: num_categories + 3を割り当て
     例: 
         num_categories=10, seq_len=6
             x: [11, 3, 6, 12, 13, 13]
