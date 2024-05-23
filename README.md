@@ -1,4 +1,6 @@
 # Transformer勉強会 実装
+解説記事
+- https://qiita.com/tf63/items/788eeecd458acfa78c83
 
 ### 動作確認
 
